@@ -42,10 +42,10 @@ public class DriveSubsystem extends SubsystemBase {
   private final DifferentialDrive m_drive = new DifferentialDrive(m_leftMotors, m_rightMotors);
 
   // The left-side drive encoder
-  private final CANEncoder m_leftEncoder = frontLeftSpark.getEncoder();
+  private final CANEncoder m_leftEncoder = rearLeftSpark.getEncoder();
 
   // The right-side drive encoder
-  private final CANEncoder m_rightEncoder = frontRightSpark.getEncoder();
+  private final CANEncoder m_rightEncoder = rearRightSpark.getEncoder();
 
   // The gyro sensor
   private final Gyro m_gyro = new AHRS(SPI.Port.kMXP);
@@ -63,25 +63,36 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public DriveSubsystem() {
     // Sets the distance per pulse for the encoders
+    init();
+    m_odometry = new DifferentialDriveOdometry(m_gyro.getRotation2d());
+  }
+
+  public void init(){
     double converter = circumference/(gear_ratio);
     SmartDashboard.putNumber("Converter", converter);
     m_leftEncoder.setPositionConversionFactor(converter);
     m_rightEncoder.setPositionConversionFactor(converter);
-    m_leftEncoder.setVelocityConversionFactor(converter/60);
-    m_rightEncoder.setVelocityConversionFactor(converter/60);
+    m_leftEncoder.setVelocityConversionFactor(circumference/(gear_ratio*60));
+    m_rightEncoder.setVelocityConversionFactor(circumference/(gear_ratio*60));
 
     resetEncoders();
-    m_odometry = new DifferentialDriveOdometry(m_gyro.getRotation2d());
   }
 
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
     m_odometry.update(m_gyro.getRotation2d(), m_leftEncoder.getPosition(),
-                      m_rightEncoder.getPosition());
+                      -m_rightEncoder.getPosition());
                       
     SmartDashboard.putNumber("Right", m_rightEncoder.getPosition());
     SmartDashboard.putNumber("Left", m_leftEncoder.getPosition());
+
+    SmartDashboard.putNumber("Right_vel", m_rightEncoder.getVelocity());
+    SmartDashboard.putNumber("Left_vel", m_leftEncoder.getVelocity());
+    SmartDashboard.putNumber("x", getPose().getTranslation().getX());
+    SmartDashboard.putNumber("y", getPose().getTranslation().getY());
+    SmartDashboard.putNumber("Angle", m_gyro.getRotation2d().getDegrees());
+
   }
 
   /**

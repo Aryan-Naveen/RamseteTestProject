@@ -25,10 +25,13 @@ import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
 import edu.wpi.first.wpilibj.trajectory.constraint.DifferentialDriveVoltageConstraint;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.preferences.AutoOption;
 import frc.robot.subsystems.ExampleSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -46,13 +49,30 @@ public class RobotContainer {
 
   private Trajectory trajectory = new Trajectory();
 
+  private SendableChooser<AutoOption> chooser = new SendableChooser<>();
+
   private double kS = 0.0843;
   private double kV = 0.239;
   private double kA = 0.0175;
 
+  private Path slalomPath;
+  private Path pathRedA;
+  private Path pathRedB;
+  private Path pathBlueA;
+  private Path pathBlueB;
+  private Path trajectoryPath;
+
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+
+    chooser.setDefaultOption("Slalom", AutoOption.Slalom);
+    chooser.addOption("Red A", AutoOption.RedA);
+    chooser.addOption("Red B", AutoOption.RedB);
+    chooser.addOption("Blue A", AutoOption.BlueA);
+    chooser.addOption("Blue B", AutoOption.BlueB);
+    SmartDashboard.putData("auto paths", chooser);
+
     // Configure the button bindings
     var autoVoltageConstraint =
         new DifferentialDriveVoltageConstraint(
@@ -71,28 +91,25 @@ public class RobotContainer {
             // Apply the voltage constraint
             .addConstraint(autoVoltageConstraint);    
     configureButtonBindings();
-    String trajectoryJSON = "paths/Slalom.wpilib.json";
-    // try {
-    //   Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
-    //   trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
-    // } catch (IOException ex) {
-    //   DriverStation.reportError("Unable to open trajectory: " + trajectoryJSON, ex.getStackTrace());
-    // }
 
-    trajectory = TrajectoryGenerator.generateTrajectory(
-      // Start at the origin facing the +X direction
-      new Pose2d(0, 0, new Rotation2d(0)),
-      // Pass through these two interior waypoints, making an 's' curve path
-      List.of(
-      ),
-      // End 3 meters straight ahead of where we started, facing forward
-      new Pose2d(3, 0, new Rotation2d(0)),
-      // Pass config
-      config
-  );
+    String slalomJson = "paths/circle.wpilib.json";
+    slalomPath = Filesystem.getDeployDirectory().toPath().resolve(slalomJson);
 
 
-  }
+
+    String pathRedAJson = "paths/PathRedA.wpilib.json";
+    pathRedA = Filesystem.getDeployDirectory().toPath().resolve(pathRedAJson);
+
+    String pathRedBJson = "paths/PathRedB.wpilib.json";
+    pathRedB = Filesystem.getDeployDirectory().toPath().resolve(pathRedBJson);
+
+    String pathBlueAJson = "paths/PathBlueA.wpilib.json";
+    pathBlueA = Filesystem.getDeployDirectory().toPath().resolve(pathBlueAJson);
+
+    String pathBlueBJson = "paths/PathBlueB.wpilib.json";
+    pathBlueB = Filesystem.getDeployDirectory().toPath().resolve(pathBlueBJson);
+}
+
 
   private Translation2d convertToMeters(Translation2d translation){
     return translation.times(0.0254);
@@ -118,8 +135,37 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
 
     // Create a voltage constraint to ensure we don't accelerate too fast
-    
 
+    AutoOption choice = chooser.getSelected();
+    if(choice == AutoOption.Slalom){
+      SmartDashboard.putNumber("Choice", 0);
+    }
+
+
+    switch(choice){
+      case Slalom:
+          trajectoryPath = slalomPath;
+          break;
+      case RedA:
+          trajectoryPath = pathRedA;
+          break;
+      case RedB:
+          trajectoryPath = pathRedB;
+          break;
+      case BlueA:
+          trajectoryPath = pathBlueA;
+          break;
+      case BlueB:
+          trajectoryPath = pathBlueB;
+          break;
+    }
+    try {
+      trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+    } catch (IOException ex) {
+      DriverStation.reportError("ERROR", ex.getStackTrace());
+    }
+
+ 
     RamseteCommand ramseteCommand = new RamseteCommand(
       trajectory,
         m_robotDrive::getPose,

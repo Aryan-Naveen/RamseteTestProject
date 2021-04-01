@@ -23,20 +23,20 @@ public final class Constants {
     // for *your* robot's drive.
     // The Robot Characterization Toolsuite provides a convenient tool for obtaining these
     // values for your robot.
-    public static final double ksVolts = 0.14;
-    public static final double kvVoltSecondsPerMeter = 3.36;
-    public static final double kaVoltSecondsSquaredPerMeter = 0.358;
+    public static final double ksVolts = 0.168;
+    public static final double kvVoltSecondsPerMeter = 2.84; //3.36
+    public static final double kaVoltSecondsSquaredPerMeter = 0.32;
 
     // Example value only - as above, this must be tuned for your drive!
-    public static final double kPDriveVel = 0.00249;
+    public static final double kPDriveVel = 0.00249; //0.00249
 
-    public static final double kTrackwidthMeters = 1.4008171044067919;
+    public static final double kTrackwidthMeters = 0.88; //1.4008171044067919;
     public static final DifferentialDriveKinematics kDriveKinematics =
         new DifferentialDriveKinematics(kTrackwidthMeters);
 
     public static final double kRamseteB = 2;
     public static final double kRamseteZeta = 0.7;
 
-    public static final double kMaxSpeedMetersPerSecond = 3;
-    public static final double kMaxAccelerationMetersPerSecondSquared = 3;
+    public static final double kMaxSpeedMetersPerSecond = 6;
+    public static final double kMaxAccelerationMetersPerSecondSquared = 6;
 }
